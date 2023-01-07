@@ -26,8 +26,8 @@ class Window {
 
 class Display {
 	private:
-		int display_width = 80;
-		int display_height = 50;
+		int display_width = 60;
+		int display_height = 20;
 		Window* window = new Window;
 		Grid win_coord_upper_left = {0, 0};
 	public:
@@ -47,18 +47,20 @@ class Display {
 		}
 
 		void initWinPosition(int x, int y) {
+			if (x < 0) x = 0;
+			if (y < 0) y = 0;
 			if (x > display_width - window->getWin_width())
 				win_coord_upper_left.x = display_width - window->getWin_width();
-			else if (x + display_width - window->getWin_width() < 0)
-				win_coord_upper_left.x = 0;
-			else
+			else if (x <= display_width - window->getWin_width())
 				win_coord_upper_left.x = x;
 			if (y > display_height - window->getWin_height())
 				win_coord_upper_left.y = display_height - window->getWin_height();
-			else if (y + display_height - window->getWin_height() < 0)
-				win_coord_upper_left.y = 0;
-			else
+			else if (y <= display_height - window->getWin_height())
 				win_coord_upper_left.y = y;
+		}
+
+		void moveWindowPosition(int x_shift, int y_shift) {
+			initWinPosition(win_coord_upper_left.x + x_shift, win_coord_upper_left.y + y_shift);
 		}
 
 		Grid getWindowPosition() {
@@ -71,6 +73,10 @@ class Display {
 
 		int getDisplayHeight() {
 			return display_height;
+		}
+
+		Window* getWindowSize() {
+			return window;
 		}
 
 		void showDisplay() {
@@ -97,7 +103,7 @@ std::string inputCommand() {
 	return command;
 }
 
-bool checkCommand(std::string in_command) {
+bool checkValidCommand(std::string in_command) {
 	if (in_command != "move" && in_command != "resize" && in_command != "display" && in_command != "close")
 		return false;
 	return true;
@@ -105,44 +111,59 @@ bool checkCommand(std::string in_command) {
 
 int main() {
 	auto* display = new Display;
-	display->initWindowSize(0, 0);
-	display->initWinPosition(0, 0);
+	int w_width, w_height, x_shift, y_shift;
 
+	std::cout << "Input size of window (width height):";
+	std::cin >> w_width >> w_height;
+	display->initWindowSize(w_width, w_height);
+	std::cout 	<< "Current window size: "
+				 << display->getWindowSize()->getWin_width() << " x "
+				 << display->getWindowSize()->getWin_height() << std::endl;
+
+	std::cout << "---------------------------------------------------" << std::endl;
 	std::cout << "You have 4 commands for operate window on display:" << std::endl;
-	std::cout << "--------------------------------------------------" << std::endl;
-	std::cout << '"' << "move" << '"' << " . . . . - for move window," << std::endl;
-	std::cout << '"' << "resize" << '"' << " . . . - for resize window," << std::endl;
-	std::cout << '"' << "display" << '"' << ". . . - for display window," << std::endl;
-	std::cout << '"' << "close" << '"' << ". . . . - for close window and exit program." << std::endl;
-	std::cout << "--------------------------------------------------" << std::endl;
+	std::cout << "---------------------------------------------------" << std::endl;
+	std::cout << '"' << "move" << '"' << " . . . . . for move window," << std::endl;
+	std::cout << '"' << "resize" << '"' << " . . . . for resize window," << std::endl;
+	std::cout << '"' << "display" << '"' << ". . . . for display window," << std::endl;
+	std::cout << '"' << "close" << '"' << ". . . . . for close window and exit program." << std::endl;
+	std::cout << "---------------------------------------------------" << std::endl;
 
-	std::string in_command = inputCommand();
-	while (!checkCommand(in_command)) {
+	std::string command = inputCommand();
+	while (!checkValidCommand(command)) {
 		std::cout << "ERROR input. Try again." << std::endl;
-		std::cout << "--------------------------------------------------" << std::endl;
-		in_command = inputCommand();
-		std::cout << "--------------------------------------------------" << std::endl;
+		std::cout << "---------------------------------------------------" << std::endl;
+		command = inputCommand();
+		std::cout << "---------------------------------------------------" << std::endl;
+	}
+	while (command != "close") {
+		if (command == "move") {
+			std::cout << "Input offset for move window (x_shift y_shift):";
+			std::cin >> x_shift >> y_shift;
+			display->moveWindowPosition(x_shift, y_shift);
+			std::cout 	<< "Current position of window's upper left corner: "
+						<< display->getWindowPosition().x << ", "
+						<< display->getWindowPosition().y << std::endl;
+		} else if (command == "resize") {
+			std::cout << "Input new size of window (width height):";
+			std::cin >> w_width >> w_height;
+			display->initWindowSize(w_width, w_height);
+			std::cout 	<< "Current window size: "
+						 << display->getWindowSize()->getWin_width() << " x "
+						 << display->getWindowSize()->getWin_height() << std::endl;
+		} else {
+			display->showDisplay();
+		}
+		std::cout << "---------------------------------------------------" << std::endl;
+		command = inputCommand();
+		std::cout << "---------------------------------------------------" << std::endl;
 	}
 
-
-
-	/*std::cout << "Input size of window (width, height):";
-	int w_width, w_height;
-	std::cin >> w_width >> w_height;
-	display->initWindowSize(w_width, w_height);
-
-	std::cout << "Input window's position on display (x, y):";
-	int x, y;
-	std::cin >> x >> y;
-	display->initWinPosition(x, y);
-
-	std::cout << "Input new window's Size (width, height):";
-	std::cin >> w_width >> w_height;
-	display->initWindowSize(w_width, w_height);
-
-	std::cout << "Input offset for change window's position on display (x, y):";
-	std::cin >> x >> y;
-	display->initWinPosition((display->getWindowPosition().x + x), (display->getWindowPosition().y + y));*/
+	display->initWindowSize(0, 0);
+	display->showDisplay();
+	std::cout << "---------------------------------------------------" << std::endl;
+	std::cout << "Exit program. Good by." << std::endl;
+	std::cout << "---------------------------------------------------" << std::endl;
 
 	delete display;
 	display = nullptr;
